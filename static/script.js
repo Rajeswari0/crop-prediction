@@ -22,7 +22,7 @@ async function recommendCrop(event) {
     };
 
     try {
-        const response = await fetch('http://127.0.0.1:8000/crop_prediction', {
+        const response = await fetch('https://crop-prediction-feue.onrender.com/crop_prediction', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
