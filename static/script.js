@@ -39,20 +39,3 @@ async function recommendCrop(event) {
     loadingSpinner.style.display = "none";
   }
 }
-// live meter updates
- window.addEventListener("load", () => {
-    // Live meter updates only
-    const fields = ["nitrogen", "phosphorus", "potassium", "temperature", "humidity", "ph", "rainfall"];
-    const meterIds = ["n-meter", "p-meter", "k-meter", "t-meter", "h-meter", "ph-meter", "r-meter"];
-
-    fields.forEach((field, i) => {
-        const input = document.getElementById(field);
-        const meter = document.getElementById(meterIds[i]);
-
-        if (input && meter) {
-            input.addEventListener("input", () => {
-                meter.value = parseFloat(input.value) || 0;
-            });
-        }
-    });
-});
