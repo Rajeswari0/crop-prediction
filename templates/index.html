@@ -12,6 +12,7 @@
     <p>Your assistant for smarter farming decisions</p>
     
     </header>
+    <!--
 
     <div id="container">
      <form onsubmit="recommendCrop(event)">
@@ -60,6 +61,21 @@
          </div>  
       </form>
     </div>
+    -->
+    <div id="live-temp-card">
+       <h3>Live Temperature: <span id="live-temp">--</span> °C</h3>
+       <form onsubmit="sendFeedback(event)">
+          <label for="feedback">Is the data accurate?</label>
+          <select id="feedback">
+           <option value="correct">Correct</option>
+           <option value="wrong">Wrong</option>
+         </select>
+         <button type="submit">Send Feedback</button>
+       </form>
+     </div>
+     
+
+
 
 <footer>
 <p> Happy to help you</p>

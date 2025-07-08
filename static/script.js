@@ -1,3 +1,4 @@
+/*
 async function recommendCrop(event) {
     event.preventDefault();
 
@@ -38,4 +39,29 @@ async function recommendCrop(event) {
   } finally {
     loadingSpinner.style.display = "none";
   }
+}*/
+
+
+let latestId = null;
+
+async function fetchLiveSensor() {
+  const res = await fetch("/latest_sensor_data");
+  const data = await res.json();
+  document.getElementById("live-temp").innerText = data.temperature.toFixed(1);
+  document.getElementById("live-humidity").innerText = data.humidity.toFixed(1);
+  document.getElementById("live-crop").innerText = data.crop;
+  latestId = data.id;
+}
+
+setInterval(fetchLatestTemp, 3000);  // every 3 seconds
+
+async function sendFeedback(event) {
+  event.preventDefault();
+  const feedback = document.getElementById("feedback").value;
+  await fetch("/feedback", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({id: latestId, feedback: feedback})
+  });
+  alert("Feedback submitted!");
 }
