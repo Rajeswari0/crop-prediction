@@ -129,12 +129,20 @@ def latest_sensor():
         record = session.exec(
             select(SensorPrediction).order_by(SensorPrediction.timestamp.desc())
         ).first()
-        return {
-            "id": record.id,
-            "temperature": record.temperature,
-            "humidity": record.humidity,
-            "crop": record.predicted_crop
-        }
+        if record:
+            return {
+                "id": record.id,
+                "temperature": record.temperature,
+                "humidity": record.humidity,
+                "crop": record.predicted_crop
+            }
+        else:
+            return {
+                "id": None,
+                "temperature": 0,
+                "humidity": 0,
+                "crop": "--"
+            }
 
 
 class FeedbackInput(BaseModel):
@@ -179,11 +187,8 @@ def export_sensor_data(format: str = "csv"):
 
 
 @app.get("/", response_class=HTMLResponse)
-def read_root():
-    return """
-    <h2> Crop Prediction API is Live!</h2>
-    <p>Use the endpoints like <code>/crop_prediction</code>, <code>/export/sensor_data</code>, etc.</p>
-    """
+async def root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 
 
