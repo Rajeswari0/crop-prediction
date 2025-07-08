@@ -178,4 +178,13 @@ def export_sensor_data(format: str = "csv"):
     return FileResponse(path=filename, filename=filename, media_type="application/octet-stream")
 
 
+@app.get("/", response_class=HTMLResponse)
+def read_root():
+    return """
+    <h2> Crop Prediction API is Live!</h2>
+    <p>Use the endpoints like <code>/crop_prediction</code>, <code>/export/sensor_data</code>, etc.</p>
+    """
+
+
+
 
