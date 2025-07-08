@@ -51,7 +51,6 @@ void loop() {
   //float soilTemp = sensors.getTempCByIndex(0);
   Serial.print("Temperature in * C: ");
   Serial.println(temperature);
-  Serial.println();
   Serial.print("Humidity: ");
   Serial.println(humidity);
  
