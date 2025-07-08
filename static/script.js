@@ -45,23 +45,36 @@ async function recommendCrop(event) {
 let latestId = null;
 
 async function fetchLiveSensor() {
-  const res = await fetch("/latest_sensor_data");
-  const data = await res.json();
-  document.getElementById("live-temp").innerText = data.temperature.toFixed(1);
-  document.getElementById("live-humidity").innerText = data.humidity.toFixed(1);
-  document.getElementById("live-crop").innerText = data.crop;
-  latestId = data.id;
+  try {
+    const res = await fetch("https://crop-prediction-1-t1e1.onrender.com/latest_sensor_data");
+    const data = await res.json();
+    
+    document.getElementById("live-temp").innerText = data.temperature.toFixed(1);
+    document.getElementById("live-humidity").innerText = data.humidity.toFixed(1);
+    document.getElementById("live-crop").innerText = data.crop || "--";
+    
+    latestId = data.id;
+  } catch (err) {
+    console.error("Error fetching live sensor data:", err);
+  }
 }
 
-setInterval(fetchLatestTemp, 3000);  // every 3 seconds
+setInterval(fetchLiveSensor, 3000);  // every 3 seconds
+fetchLiveSensor();
 
 async function sendFeedback(event) {
   event.preventDefault();
   const feedback = document.getElementById("feedback").value;
-  await fetch("/feedback", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({id: latestId, feedback: feedback})
-  });
-  alert("Feedback submitted!");
+  try {
+    const response = await fetch("https://crop-prediction-1-t1e1.onrender.com/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: latestId, feedback: feedback })
+    });
+
+    if (!response.ok) throw new Error("Failed to submit feedback");
+    alert("Feedback submitted!");
+  } catch (err) {
+    alert("Error submitting feedback: " + err.message);
+  }
 }
