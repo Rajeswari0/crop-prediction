@@ -25,13 +25,26 @@ import os
 print("STATIC FILES MOUNTED FROM:")
 print(os.path.abspath("static"))
 
+DATABASE_URL = "sqlite:///temperature_data.db"  # Use PostgreSQL later
+engine = create_engine(DATABASE_URL)
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    SQLModel.metadata.create_all(engine)  # auto-create table
+    yield
+
+app = FastAPI( lifespan=lifespan)
+
+origins = [
+    "http://127.0.0.1:8000",  # your local frontend
+    "http://localhost:8000",
+    "https://crop-prediction-1-t1e1.onrender.com"  # if frontend is also hosted here
+]
 
 # Allow frontend access
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Use specific origin if needed
+    allow_origins=origins,  # Use specific origin if needed
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -51,10 +64,6 @@ with open('label_encoder_2.pkl', 'rb') as f:
     le = pickle.load(f)
 
 x_columns = ["N", "P", "K", "temperature", "humidity", "ph", "rainfall"]
-
-DATABASE_URL = "sqlite:///temperature_data.db"  # Use PostgreSQL later
-engine = create_engine(DATABASE_URL)
-SQLModel.metadata.create_all(engine)
 
 class SensorInput(BaseModel):
     
@@ -106,9 +115,14 @@ def home(request: Request):
 def sensor_upload(data: SensorInput):
     # Use dummy NPK/ph/rainfall values
     df = pd.DataFrame([{
-        "N": 82, "P": 42, "K": 43, "ph": 7, "rainfall": 200,
+        "N": 82,
+        "P": 42,
+        "K": 43,
         "temperature": data.temperature,
-        "humidity": data.humidity
+        "humidity": data.humidity,
+        "ph": 7,
+        "rainfall": 202
+        
     }], columns=x_columns)
 
     scaled = std.transform(df)
@@ -167,7 +181,7 @@ def export_sensor_data(format: str = "csv"):
         return {"message": "No sensor data available to export."}
 
     # Convert SQLModel objects to list of dicts for DataFrame
-    df = pd.DataFrame([r.dict() for r in records])
+    df = pd.DataFrame([r.model_dump() for r in records])
 
     filename = f"sensor_data_export.{format}"
 
