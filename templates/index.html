@@ -10,78 +10,32 @@
     <header>
     <h1> Crop Recommendation System</h1>
     <p>Your assistant for smarter farming decisions</p>
-    
     </header>
-    <!--
 
-    <div id="container">
-     <form onsubmit="recommendCrop(event)">
-         <h2>Enter details:</h2>
-         <div class="form-group">
-          <label for="nitrogen">Nitrogen (N):</label>
-          <input id="nitrogen" type="number" name="nitrogen"step="0.1" min="0" max="300" placeholder="Enter Nitrogen"required><br>
-          </div>
+    <div id="prediction">
+      <div id="sensordata">
+        <h2>Live Sensor Data</h2>
+        <h3>Soil Nitrogen: <span id="live-nitrogen">--</span> ppm</h3>
+        <h3>Soil Phosphorus: <span id="live-phosphorus">--</span> ppm</h3>
+        <h3>Soil Potassium: <span id="live-potassium">--</span> ppm</h3>
+        <h3>Temperature: <span id="live-temp">--</span> °C</h3>
+        <h3>Humidity: <span id="live-humidity">--</span> %</h3>
+        <h3>Soil pH: <span id="live-ph">--</span></h3>
+        <h3>Rainfall: <span id="live-rainfall">--</span> mm</h3>
+      </div>
 
-         <div class="form-group">
-          <label for="phosphorus">Phosphorus (P):</label>
-          <input id="phosphorus" type="number" name="phosphorus" step="0.1" min="0" max="300" placeholder="Enter Phosphorus" required><br>
-         </div>
-
-         <div class="form-group">
-          <label for="potassium">Potassium (K):</label>
-          <input id="potassium" type="number" name="potassium" step="0.1" min="0" max="300"placeholder="Enter Potassium" required><br>
-         </div>
-
-         <div class="form-group">
-          <label for="temperature">Temperature (°C):</label>
-          <input id="temperature" type="number" name="temperature" step="0.1" min="0" max="70" placeholder="Enter Temperature(*C)" required><br>
-         </div>
-
-         <div class="form-group">
-          <label for="humidity">Humidity (%):</label>
-          <input id="humidity" type="number" name="humidity" step="0.1" min="0" max="100" placeholder="Enter Humidity(%)" required><br>
-         </div>
-         
-         <div class="form-group">
-          <label for="ph">Soil pH:</label>
-          <input id="ph" type="number" name="ph" step="0.1" min="0" max="14" placeholder="Enter soil pH" required><br>
-         </div>
-
-         <div class="form-group">
-          <label for="rainfall">Rainfall (mm):</label>
-          <input id="rainfall" type="number" name="rainfall"step="0.1" min="0" max="500"placeholder="Enter Rainfall (mm)"required><br>
-         </div>
-
-         <button type="submit">Submit</button>
-         <div id="loading" class="spinner" style="display: none;"></div>
-
-         <div id="result-card" style="display:none;">
-          <h3> Recommended Crop:</h3>
-          <p id="result" class="result-text"></p>
-         </div>  
-      </form>
+      <div id="result-card">
+        <h2>Recommended Crop</h2>
+        <p id ="result" class="result-text">  </p>
+      </div>
     </div>
-    -->
-    <div id="live-temp-card">
-       <h3>Live Temperature: <span id="live-temp">--</span> °C</h3>
-       <h3>Live Humidity: <span id="live-humidity">--</span> %</h3>
-       <h3>Predicted Crop: <span id="live-crop">--</span></h3>
-       <form onsubmit="sendFeedback(event)">
-          <label for="feedback">Is the data accurate?</label>
-          <select id="feedback">
-           <option value="correct">Correct</option>
-           <option value="wrong">Wrong</option>
-         </select>
-         <button type="submit">Send Feedback</button>
-       </form>
-     </div>
      
 
 
 
-<footer>
-<p> Happy to help you</p>
-</footer>
-<script src="/static/script.js"></script>
-  </body>
+  <footer>
+    <p> Happy to help you</p>
+  </footer>
+  <script src="/static/script.js"></script>
+</body>
 </html>
