@@ -14,7 +14,7 @@ from pydantic import BaseModel
 import pickle
 import pandas as pd
 
-from sqlmodel import SQLModel, Field,create_engine, select, Session
+from sqlmodel import SQLModel, Field, create_engine, select, Session
 from typing import Optional
 from datetime import datetime
 
@@ -22,6 +22,8 @@ from contextlib import asynccontextmanager
 import os
 
 
+print("STATIC FILES MOUNTED FROM:")
+print(os.path.abspath("static"))
 
 
 app = FastAPI()
@@ -35,26 +37,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Static and template folders
+base_dir = os.path.dirname(__file__)
+app.mount("/static", StaticFiles(directory=os.path.join(base_dir, "static")), name="static")
+templates = Jinja2Templates(directory=os.path.join(base_dir, "templates"))
 
-class SensorInput(BaseModel):
-    
-    #N : float
-    #P : float
-    #K : float
-    temperature : float
-    humidity : float
-    #ph : float
-    #rainfall : float
-
-class SensorPrediction(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    temperature: float
-    humidity: float
-    predicted_crop: str
-    feedback: Optional[str] = None
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
-
-    
 # Load model, scaler, and label encoder
 with open('crop_recommendation_rf_model_api.pkl', 'rb') as f:
     model = pickle.load(f)
@@ -65,9 +52,36 @@ with open('label_encoder_2.pkl', 'rb') as f:
 
 x_columns = ["N", "P", "K", "temperature", "humidity", "ph", "rainfall"]
 
-# Static and template folders
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
+DATABASE_URL = "sqlite:///temperature_data.db"  # Use PostgreSQL later
+engine = create_engine(DATABASE_URL)
+SQLModel.metadata.create_all(engine)
+
+class SensorInput(BaseModel):
+    
+    N : float
+    P : float
+    K : float
+    temperature : float
+    humidity : float
+    ph : float
+    rainfall : float
+
+class FeedbackInput(BaseModel):
+    id: int
+    feedback: str
+
+class SensorPrediction(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    temperature: float
+    humidity: float
+    predicted_crop: str
+    feedback: Optional[str] = None
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+    
+@app.get("/", response_class=HTMLResponse)
+def home(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 # Route to serve the form
 #@app.get("/", response_class=HTMLResponse)
@@ -86,23 +100,6 @@ templates = Jinja2Templates(directory="templates")
     # Decode label
     #predicted_crop = le.inverse_transform(prediction)
     #return {"recommended crop": predicted_crop[0]}
-
-DATABASE_URL = "sqlite:///temperature_data.db"  # Use PostgreSQL later
-engine = create_engine(DATABASE_URL)
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    SQLModel.metadata.create_all(engine)
-    yield
-
-app = FastAPI(lifespan=lifespan)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 
 @app.post("/upload")
@@ -151,10 +148,6 @@ def latest_sensor():
             }
 
 
-class FeedbackInput(BaseModel):
-    id: int
-    feedback: str
-
 @app.post("/feedback")
 def submit_feedback(data: FeedbackInput):
     with Session(engine) as session:
@@ -190,12 +183,6 @@ def export_sensor_data(format: str = "csv"):
         return {"error": "Format must be either 'csv' or 'xlsx'."}
 
     return FileResponse(path=filename, filename=filename, media_type="application/octet-stream")
-
-
-@app.get("/", response_class=HTMLResponse)
-async def root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
-
 
 
 
