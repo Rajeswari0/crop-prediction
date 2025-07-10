@@ -31,6 +31,10 @@ document.addEventListener("DOMContentLoaded", () => {
     //setText("live-rainfall", data.rainfall ?? "202");
     //setText("result", data["recommended crop"] || data.crop || "--");
     // latestId = data.id;
+    if (data.id && data.id !== latestId) {
+      latestId = data.id;
+      console.log("Latest sensor data ID:", latestId);
+    }
    } catch (err) {
     console.error("Error fetching live sensor data:", err);
    }

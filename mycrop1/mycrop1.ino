@@ -98,7 +98,7 @@ void loop() {
   if(WiFi.status() == WL_CONNECTED){
     if (!isnan(temperature) && !isnan(humidity)) {
      HTTPClient http;
-     http.begin(String(serverURL) + "/upload");
+     http.begin(String(serverURL));
      http.addHeader("Content-Type","application/json");
 
      String json = "{";
@@ -106,6 +106,8 @@ void loop() {
      json +="\"humidity\":" + String(humidity, 2);
      json +="}";
   
+     Serial.println("Sending JSON: " + json);
+
 
      int code = http.POST(json);
      Serial.print("Status code: ");

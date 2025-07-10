@@ -113,6 +113,7 @@ def home(request: Request):
 
 @app.post("/sensor_data")
 def receive_sensor_data(sensor: BasicSensor):
+    print(f"✅ Received Sensor Data: Temp={sensor.temperature}, Humidity={sensor.humidity}")
     log = SensorPrediction(
         temperature=sensor.temperature,
         humidity=sensor.humidity,
@@ -122,6 +123,7 @@ def receive_sensor_data(sensor: BasicSensor):
         session.add(log)
         session.commit()
     return {"message": "Sensor data stored", "id": log.id}
+
 
 
 @app.post("/upload")
