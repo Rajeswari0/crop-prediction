@@ -23,7 +23,7 @@ import os
 
 
 
-DATABASE_URL = "sqlite:///temperature_data.db"  # Use PostgreSQL later
+DATABASE_URL = "sqlite:///temperature_data.db"  # SQLite database file
 engine = create_engine(DATABASE_URL)
 
 @asynccontextmanager
@@ -34,9 +34,9 @@ async def lifespan(app: FastAPI):
 app = FastAPI( lifespan=lifespan)
 
 origins = [
-    "http://127.0.0.1:8000",  # your local frontend
+    "http://127.0.0.1:8000",  # local frontend
     "http://localhost:8000",
-    "https://crop-prediction-1-t1e1.onrender.com"  # if frontend is also hosted here
+    "https://crop-prediction-1-t1e1.onrender.com" #deployed frontend  
 ]
 
 # Allow frontend access
@@ -102,26 +102,6 @@ class SensorInput(BaseModel):
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
-
-# Route to serve the form
-#@app.get("/", response_class=HTMLResponse)
-#def home(request: Request):
-    #return templates.TemplateResponse("index.html", {"request": request})
-
-
-#@app.post('/crop_prediction')
-#def crop_pred(input_parameters: model_input):
-    # Convert input to DataFrame
-    #input_df = pd.DataFrame([input_parameters.model_dump()], columns=x_columns)
-    # Scale input
-    #input_scaled = std.transform(input_df)
-    # Predict
-    #prediction = model.predict(input_scaled)
-    # Decode label
-    #predicted_crop = le.inverse_transform(prediction)
-    #return {"recommended crop": predicted_crop[0]}
-
-
 
 @app.post("/sensor_data")
 def receive_sensor_data(sensor: BasicSensor):
@@ -234,6 +214,3 @@ def export_sensor_data(format: str = "csv"):
         return {"error": "Format must be either 'csv' or 'xlsx'."}
 
     return FileResponse(path=filename, filename=filename, media_type="application/octet-stream")
-
-
-
