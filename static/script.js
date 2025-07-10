@@ -28,9 +28,11 @@ document.addEventListener("DOMContentLoaded", () => {
     //setText("live-nitrogen", data.nitrogen ?? "82");
     //setText("live-phosphorus", data.phosphorus ?? "43");
     //setText("live-potassium", data.potassium ?? "42");
-    setText("live-temp", data.temperature !=null ? data.temperature.toFixed(1):"--");
-    setText("live-humidity", data.humidity !=null ? data.humidity.toFixed(1):"--");
-    setText("live-moisture", data.soil_moisture != null ? data.soil_moisture.toFixed(1): "--");
+    setText("live-temp", data.temperature !=null ? data.temperature.toFixed(2):"--");
+    setText("live-humidity", data.humidity !=null ? data.humidity.toFixed(2):"--");
+    setText("live-moisture", data.soil_moisture != null ? data.soil_moisture.toFixed(2): "--");
+    setText("live-soil-temp", data.soil_temp != null ? data.soil_temp.toFixed(2): "--");
+    setText("live-turbidity", data.tds != null ? data.tds.toFixed(2): "--");
 
     //setText("live-ph", data.ph ?? "6.5");
     //setText("live-rainfall", data.rainfall ?? "202");

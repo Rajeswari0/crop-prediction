@@ -16,7 +16,7 @@ import pandas as pd
 
 from sqlmodel import SQLModel, Field, create_engine, select, Session
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 from contextlib import asynccontextmanager
 import os
@@ -68,17 +68,26 @@ x_columns = ["N", "P", "K", "temperature", "humidity", "ph", "rainfall"]
 
 class SensorPrediction(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
+    N: Optional[float] = None
+    P: Optional[float] = None
+    K: Optional[float] = None
     temperature: float
     humidity: float
+    ph: Optional[float] = None
+    rainfall: Optional[float] = None
     soil_moisture: Optional[float] = None
+    soil_temp: Optional[float] = None
+    tds: Optional[float] = None 
     predicted_crop: str
     feedback: Optional[str] = None
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class BasicSensor(BaseModel):
     temperature: float
     humidity: float
     soil_moisture: Optional[float] = None
+    soil_temp: Optional[float] = None
+    tds: Optional[float] = None 
 
 class SensorInput(BaseModel):
     N: float
@@ -120,6 +129,8 @@ def receive_sensor_data(sensor: BasicSensor):
         temperature=sensor.temperature,
         humidity=sensor.humidity,
         soil_moisture=sensor.soil_moisture,
+        soil_temp = sensor.soil_temp,
+        tds = sensor.tds, 
         predicted_crop="--"
     )
     with Session(engine) as session:
@@ -139,17 +150,31 @@ def sensor_upload(data: SensorInput):
     prediction = model.predict(scaled)
     # Decode the predicted crop label
     predicted_crop = le.inverse_transform(prediction)[0]
+   
+    with Session(engine) as session:
+        latest_record = session.exec(
+            select(SensorPrediction)
+            .where(SensorPrediction.soil_moisture != None)
+            .order_by(SensorPrediction.timestamp.desc())
+        ).first()
 
-    log = SensorPrediction(
-        temperature=data.temperature,
-        humidity=data.humidity,
-        predicted_crop=predicted_crop
+        log = SensorPrediction(
+            N=data.N,
+            P=data.P,
+            K=data.K,
+            temperature=data.temperature,
+            humidity=data.humidity,
+            ph=data.ph,
+            rainfall=data.rainfall,
+            soil_moisture=latest_record.soil_moisture if latest_record else None,
+            soil_temp=latest_record.soil_temp if latest_record else None,
+            tds=latest_record.tds if latest_record else None,
+            predicted_crop=predicted_crop
     )
 
-    with Session(engine) as session:
-        session.add(log)
-        session.commit()
-        return {"crop": predicted_crop, "id": log.id}
+    session.add(log)
+    session.commit()
+    return {"crop": predicted_crop, "id": log.id}
     
 @app.get("/latest_sensor_data")
 def latest_sensor():
@@ -163,6 +188,13 @@ def latest_sensor():
                 "temperature": record.temperature,
                 "humidity": record.humidity,
                 "soil_moisture": record.soil_moisture,
+                "soil_temp": record.soil_temp,
+                "tds": record.tds,
+                "ph": record.ph,
+                "rainfall": record.rainfall,
+                "N": record.N,
+                "P": record.P,
+                "K": record.K,
                 "crop": record.predicted_crop
             }
         else:
@@ -171,6 +203,8 @@ def latest_sensor():
                 "temperature": 0,
                 "humidity": 0,
                 "soil_moisture": None,
+                "soil_temp": None,
+                "tds": None,
                 "crop": "--"
             }
 
