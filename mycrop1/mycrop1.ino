@@ -1,9 +1,9 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include "DHT.h"
-#include <OneWire.h>
-#include <DallasTemperature.h>
-#include <Wire.h>
+//#include <OneWire.h>
+//#include <DallasTemperature.h>
+//#include <Wire.h>
 
 //DHT
 #define DHTPIN 26
@@ -11,22 +11,19 @@
 DHT dht(DHTPIN, DHTTYPE);
 
 //soil temperature
-#define ONE_WIRE_BUS 4
-OneWire oneWire(ONE_WIRE_BUS);
-DallasTemperature sensors(&oneWire);
+//#define ONE_WIRE_BUS 4
+//OneWire oneWire(ONE_WIRE_BUS);
+//DallasTemperature sensors(&oneWire);
 
 // TDS
-#define TDS_PIN 34
-#define VREF 3.3
-#define ADC_RES 4095
-float calibration_factor = 0.5;
-float TEMP = 25.0;
+//#define TDS_PIN 34
+//#define VREF 3.3
+//#define ADC_RES 4095
+//float calibration_factor = 0.5;
+//float TEMP = 25.0;
 
 
 #define SOIL_MOISTURE_PIN 32
-
-#define GAS_SENSOR_PIN 35
-
 
 //WiFi credentials
 const char* ssid = "Galaxy M53 5G";
@@ -46,7 +43,7 @@ void setup() {
   }
   Serial.println("Connected to WiFi!!!");
   dht.begin();
-  sensors.begin();
+  //sensors.begin();
 }
 
 void loop() {
@@ -60,18 +57,18 @@ void loop() {
   //gas sensor input
   //int agasValue = analogRead(35);
   //tds input
-  int tdsRaw = 0;
-  for (int i = 0; i < 10; i++) {
-  tdsRaw += analogRead(TDS_PIN);
-  delay(10);
-  }
-  tdsRaw /= 10;
-  float voltage = tdsRaw * (VREF / ADC_RES);
-  float tds = (voltage * calibration_factor) * 1000;
-  float tdsComp = tds / (1.0 + 0.02 * (TEMP - 25.0));
+  //int tdsRaw = 0;
+  //for (int i = 0; i < 10; i++) {
+  //tdsRaw += analogRead(TDS_PIN);
+  //delay(10);
+  //}
+  //tdsRaw /= 10;
+  //float voltage = tdsRaw * (VREF / ADC_RES);
+  //float tds = (voltage * calibration_factor) * 1000;
+  //float tdsComp = tds / (1.0 + 0.02 * (TEMP - 25.0));
   //soil temperature input
-  sensors.requestTemperatures();
-  float soilTemp = sensors.getTempCByIndex(0);
+  //sensors.requestTemperatures();
+  //float soilTemp = sensors.getTempCByIndex(0);
 
   Serial.print("Temperature : ");
   Serial.print(temperature);
@@ -81,18 +78,18 @@ void loop() {
   Serial.print(humidity);
   Serial.println("  %");
 
-  Serial.print("Soil Temperature: ");
-  Serial.print(soilTemp);
-  Serial.println("  *C");  
+  //Serial.print("Soil Temperature: ");
+  //Serial.print(soilTemp);
+  //Serial.println("  *C");  
 
   Serial.print("Soil Moisture (Dryness %): ");
   Serial.print(soilMoisture);
   Serial.println("  %");
 
-  Serial.print("TDS (ppm): ");
-  Serial.print(tdsComp);
-  Serial.println("  %");
-  Serial.println("---------------");
+  //Serial.print("TDS (ppm): ");
+  //Serial.print(tdsComp);
+  //Serial.println("  %");
+  
  
 
   if(WiFi.status() == WL_CONNECTED){
@@ -103,7 +100,8 @@ void loop() {
 
      String json = "{";
      json +="\"temperature\":" + String(temperature, 2) + ",";
-     json +="\"humidity\":" + String(humidity, 2);
+     json +="\"humidity\":" + String(humidity, 2) + ",";
+     json +="\"soil_moisture\":" + String(soilMoisture, 2);
      json +="}";
   
      Serial.println("Sending JSON: " + json);
@@ -116,6 +114,7 @@ void loop() {
      String response = http.getString();
      Serial.println("Server Response: ");
      Serial.println(response);
+     Serial.println("---------------");
 
      http.end();
     }

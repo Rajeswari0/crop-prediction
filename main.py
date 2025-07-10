@@ -65,10 +65,12 @@ x_columns = ["N", "P", "K", "temperature", "humidity", "ph", "rainfall"]
 
 
 
+
 class SensorPrediction(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     temperature: float
     humidity: float
+    soil_moisture: Optional[float] = None
     predicted_crop: str
     feedback: Optional[str] = None
     timestamp: datetime = Field(default_factory=datetime.utcnow)
@@ -76,6 +78,7 @@ class SensorPrediction(SQLModel, table=True):
 class BasicSensor(BaseModel):
     temperature: float
     humidity: float
+    soil_moisture: Optional[float] = None
 
 class SensorInput(BaseModel):
     N: float
@@ -113,22 +116,17 @@ def home(request: Request):
 
 @app.post("/sensor_data")
 def receive_sensor_data(sensor: BasicSensor):
-    print(f"✅ Received Sensor Data: Temp={sensor.temperature}, Humidity={sensor.humidity}")
-    try:
-        log = SensorPrediction(
-            temperature=sensor.temperature,
-            humidity=sensor.humidity,
-            predicted_crop="--"
-        )
-        with Session(engine) as session:
-            session.add(log)
-            session.commit()
-            log_id = log.id
-        print(f"✅ Data stored in DB. ID: {log.id}")
-        return {"message": "Sensor data stored", "id": log.id}
-    except Exception as e:
-        print("❌ Error in /sensor_data:", e)
-        return {"error": str(e)}
+    log = SensorPrediction(
+        temperature=sensor.temperature,
+        humidity=sensor.humidity,
+        soil_moisture=sensor.soil_moisture,
+        predicted_crop="--"
+    )
+    with Session(engine) as session:
+        session.add(log)
+        session.commit()
+        log_id = log.id  # Access ID before session closes
+    return {"message": "Sensor data stored", "id": log_id}
 
 
 
@@ -164,6 +162,7 @@ def latest_sensor():
                 "id": record.id,
                 "temperature": record.temperature,
                 "humidity": record.humidity,
+                "soil_moisture": record.soil_moisture,
                 "crop": record.predicted_crop
             }
         else:
@@ -171,6 +170,7 @@ def latest_sensor():
                 "id": None,
                 "temperature": 0,
                 "humidity": 0,
+                "soil_moisture": None,
                 "crop": "--"
             }
 

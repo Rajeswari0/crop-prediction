@@ -1,6 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
  let latestId = null;
 
+ const BASE_URL = location.hostname === "localhost" || location.hostname === "127.0.0.1"? "http://127.0.0.1:8000": "https://crop-prediction-1-t1e1.onrender.com";
+
  const setText = (id, value) => {
    const element = document.getElementById(id);
    /*if(!element) {
@@ -18,7 +20,8 @@ document.addEventListener("DOMContentLoaded", () => {
  async function fetchLiveSensor() {
   
    try {
-    const res = await fetch("https://crop-prediction-1-t1e1.onrender.com/latest_sensor_data");
+    const res = await fetch(`${BASE_URL}/latest_sensor_data`);
+
     const data = await res.json();
     
     
@@ -27,6 +30,8 @@ document.addEventListener("DOMContentLoaded", () => {
     //setText("live-potassium", data.potassium ?? "42");
     setText("live-temp", data.temperature !=null ? data.temperature.toFixed(1):"--");
     setText("live-humidity", data.humidity !=null ? data.humidity.toFixed(1):"--");
+    setText("live-moisture", data.soil_moisture != null ? data.soil_moisture.toFixed(1) + "%" : "--");
+
     //setText("live-ph", data.ph ?? "6.5");
     //setText("live-rainfall", data.rainfall ?? "202");
     //setText("result", data["recommended crop"] || data.crop || "--");
@@ -59,7 +64,7 @@ form.addEventListener('submit', async function (e) {
   document.getElementById('result').textContent = "";
 
  try {
-      const response = await fetch('/upload', {
+      const response = await fetch(`${BASE_URL}/upload`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
