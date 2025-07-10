@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
     //setText("live-potassium", data.potassium ?? "42");
     setText("live-temp", data.temperature !=null ? data.temperature.toFixed(1):"--");
     setText("live-humidity", data.humidity !=null ? data.humidity.toFixed(1):"--");
-    setText("live-moisture", data.soil_moisture != null ? data.soil_moisture.toFixed(1) + "%" : "--");
+    setText("live-moisture", data.soil_moisture != null ? data.soil_moisture.toFixed(1): "--");
 
     //setText("live-ph", data.ph ?? "6.5");
     //setText("live-rainfall", data.rainfall ?? "202");
