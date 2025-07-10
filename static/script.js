@@ -62,7 +62,7 @@ form.addEventListener('submit', async function (e) {
       });
 
       const result = await response.json();
-      document.getElementById('result').textContent = result.recommended_crop;
+      document.getElementById('result').textContent = result.crop || "--";
     } catch (error) {
       console.error("Prediction error:", error);
       document.getElementById('result').textContent = "Prediction failed.";
