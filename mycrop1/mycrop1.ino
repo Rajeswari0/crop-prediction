@@ -1,25 +1,37 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include "DHT.h"
-//#include <OneWire.h>
-//#include <DallasTemperature.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
+#include <Wire.h>
 
-#define DHTPIN 27
+//DHT
+#define DHTPIN 26
 #define DHTTYPE DHT22
 DHT dht(DHTPIN, DHTTYPE);
 
-//#define ONE_WIRE_BUS 15
-//OneWire oneWire(ONE_WIRE_BUS);
-//DallasTemperature sensors(&oneWire);
+//soil temperature
+#define ONE_WIRE_BUS 4
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature sensors(&oneWire);
 
-//#define SOIL_MOISTURE_PIN 34
-//#define GAS_SENSOR_PIN 35
-//#define TDS_SENSOR_PIN 32
+// TDS
+#define TDS_PIN 34
+#define VREF 3.3
+#define ADC_RES 4095
+float calibration_factor = 0.5;
+float TEMP = 25.0;
+
+
+#define SOIL_MOISTURE_PIN 32
+
+#define GAS_SENSOR_PIN 35
+
 
 //WiFi credentials
 const char* ssid = "Galaxy M53 5G";
 const char* password = "gkbu2351";
-const char* serverURL = "https://crop-prediction-feue.onrender.com/crop_prediction";
+const char* serverURL = "https://crop-prediction-1-t1e1.onrender.com/sensor_data";
 
 
 void setup() {
@@ -34,49 +46,78 @@ void setup() {
   }
   Serial.println("Connected to WiFi!!!");
   dht.begin();
-  //sensors.begin();
-
-
+  sensors.begin();
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
+  //dht input
   float temperature = dht.readTemperature();
   float humidity = dht.readHumidity();
-  //int asoilMoisture = analogRead(34);
+  //soil moiosture input
+  int asoilMoisture = analogRead(32);
+  float soilMoisture = map(asoilMoisture, 0, 4095, 100, 0);
+  //gas sensor input
   //int agasValue = analogRead(35);
-  //int aTDS = analogRead() 
+  //tds input
+  int tdsRaw = 0;
+  for (int i = 0; i < 10; i++) {
+  tdsRaw += analogRead(TDS_PIN);
+  delay(10);
+  }
+  tdsRaw /= 10;
+  float voltage = tdsRaw * (VREF / ADC_RES);
+  float tds = (voltage * calibration_factor) * 1000;
+  float tdsComp = tds / (1.0 + 0.02 * (TEMP - 25.0));
+  //soil temperature input
+  sensors.requestTemperatures();
+  float soilTemp = sensors.getTempCByIndex(0);
 
-  //sensors.requestTemperatures();
-  //float soilTemp = sensors.getTempCByIndex(0);
-  Serial.print("Temperature in * C: ");
-  Serial.println(temperature);
+  Serial.print("Temperature : ");
+  Serial.print(temperature);
+  Serial.println("  *C");
+
   Serial.print("Humidity: ");
-  Serial.println(humidity);
+  Serial.print(humidity);
+  Serial.println("  %");
+
+  Serial.print("Soil Temperature: ");
+  Serial.print(soilTemp);
+  Serial.println("  *C");  
+
+  Serial.print("Soil Moisture (Dryness %): ");
+  Serial.print(soilMoisture);
+  Serial.println("  %");
+
+  Serial.print("TDS (ppm): ");
+  Serial.print(tdsComp);
+  Serial.println("  %");
+  Serial.println("---------------");
  
 
   if(WiFi.status() == WL_CONNECTED){
     if (!isnan(temperature) && !isnan(humidity)) {
      HTTPClient http;
-     http.begin(serverURL);
+     http.begin(String(serverURL) + "/upload");
      http.addHeader("Content-Type","application/json");
 
      String json = "{";
-     json +="\"Temperature\":" + String(temperature, 2) + ",";
-     json +="\"Humidity\":" + String(humidity, 2) + ",";
-     //json +="\"Soil Moisture\":" + String(soilMoisture, 2) + ",";
-     //json +="\"Soil Temperature\":" + String(soilTemp, 2) + ",";
-     //json +="\"Gas level\":" + String(gasValue, 2) + ",";
-     //json +="\"tds\":" + String(tds,2);
+     json +="\"temperature\":" + String(temperature, 2) + ",";
+     json +="\"humidity\":" + String(humidity, 2);
      json +="}";
   
 
      int code = http.POST(json);
      Serial.print("Status code: ");
      Serial.println(code);
+
+     String response = http.getString();
+     Serial.println("Server Response: ");
+     Serial.println(response);
+
      http.end();
     }
   }
-  delay(5000);
+  delay(10000);
 }
 

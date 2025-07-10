@@ -22,8 +22,6 @@ from contextlib import asynccontextmanager
 import os
 
 
-print("STATIC FILES MOUNTED FROM:")
-print(os.path.abspath("static"))
 
 DATABASE_URL = "sqlite:///temperature_data.db"  # Use PostgreSQL later
 engine = create_engine(DATABASE_URL)
@@ -65,19 +63,7 @@ with open('label_encoder_2.pkl', 'rb') as f:
 
 x_columns = ["N", "P", "K", "temperature", "humidity", "ph", "rainfall"]
 
-class SensorInput(BaseModel):
-    
-    N : float
-    P : float
-    K : float
-    temperature : float
-    humidity : float
-    ph : float
-    rainfall : float
 
-class FeedbackInput(BaseModel):
-    id: int
-    feedback: str
 
 class SensorPrediction(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -86,6 +72,19 @@ class SensorPrediction(SQLModel, table=True):
     predicted_crop: str
     feedback: Optional[str] = None
     timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+class BasicSensor(BaseModel):
+    temperature: float
+    humidity: float
+
+class SensorInput(BaseModel):
+    N: float
+    P: float
+    K: float
+    ph: float
+    rainfall: float
+    temperature: float
+    humidity: float
 
     
 @app.get("/", response_class=HTMLResponse)
@@ -111,22 +110,28 @@ def home(request: Request):
     #return {"recommended crop": predicted_crop[0]}
 
 
+
+@app.post("/sensor_data")
+def receive_sensor_data(sensor: BasicSensor):
+    log = SensorPrediction(
+        temperature=sensor.temperature,
+        humidity=sensor.humidity,
+        predicted_crop="--"  # placeholder, not predicted yet
+    )
+    with Session(engine) as session:
+        session.add(log)
+        session.commit()
+    return {"message": "Sensor data stored", "id": log.id}
+
+
 @app.post("/upload")
 def sensor_upload(data: SensorInput):
-    # Use dummy NPK/ph/rainfall values
-    df = pd.DataFrame([{
-        "N": 82,
-        "P": 42,
-        "K": 43,
-        "temperature": data.temperature,
-        "humidity": data.humidity,
-        "ph": 7,
-        "rainfall": 202
-        
-    }], columns=x_columns)
-
-    scaled = std.transform(df)
+    df = pd.DataFrame([data.model_dump()], columns=x_columns)
+    # Scale the input data
+    scaled = std.transform(df)   
+    # Predict the crop using the model
     prediction = model.predict(scaled)
+    # Decode the predicted crop label
     predicted_crop = le.inverse_transform(prediction)[0]
 
     log = SensorPrediction(
@@ -161,16 +166,6 @@ def latest_sensor():
                 "crop": "--"
             }
 
-
-@app.post("/feedback")
-def submit_feedback(data: FeedbackInput):
-    with Session(engine) as session:
-        record = session.get(SensorPrediction, data.id)
-        if record:
-            record.feedback = data.feedback
-            session.commit()
-            return {"message": "Feedback recorded"}
-        return {"error": "Invalid ID"}
     
 @app.get("/export/sensor-data", response_class=FileResponse)
 def export_sensor_data(format: str = "csv"):
