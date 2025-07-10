@@ -114,15 +114,21 @@ def home(request: Request):
 @app.post("/sensor_data")
 def receive_sensor_data(sensor: BasicSensor):
     print(f"✅ Received Sensor Data: Temp={sensor.temperature}, Humidity={sensor.humidity}")
-    log = SensorPrediction(
-        temperature=sensor.temperature,
-        humidity=sensor.humidity,
-        predicted_crop="--"  # placeholder, not predicted yet
-    )
-    with Session(engine) as session:
-        session.add(log)
-        session.commit()
-    return {"message": "Sensor data stored", "id": log.id}
+    try:
+        log = SensorPrediction(
+            temperature=sensor.temperature,
+            humidity=sensor.humidity,
+            predicted_crop="--"
+        )
+        with Session(engine) as session:
+            session.add(log)
+            session.commit()
+            log_id = log.id
+        print(f"✅ Data stored in DB. ID: {log.id}")
+        return {"message": "Sensor data stored", "id": log.id}
+    except Exception as e:
+        print("❌ Error in /sensor_data:", e)
+        return {"error": str(e)}
 
 
 
