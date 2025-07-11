@@ -55,7 +55,7 @@ void loop() {
 
   //soil moiosture input
   int asoilMoisture = analogRead(32);
-  float soilMoisture = map(asoilMoisture, 0, 4095, 100, 0);
+  float soilMoisture = map(asoilMoisture, 0, 3580, 100, 0);
   
   //soil temperature input
   sensors.requestTemperatures();

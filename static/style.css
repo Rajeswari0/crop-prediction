@@ -5,7 +5,7 @@
 }
 
 body{
-    background-image: url('/static/canva1.jpg');
+    background-color:rgba(238, 238, 238, 1) ;
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -16,7 +16,7 @@ body{
 }
 
 header {
-    background-color: rgba(255, 255, 255, 0.6);
+    background-color:rgba(32, 30, 67, 1);
     backdrop-filter: blur(1px);
     background-size: cover;
     background-position:top;
@@ -26,7 +26,7 @@ header {
 }
 
 h1{
-    color : rgb(72, 147, 104);
+    color : rgba(246, 246, 246, 1);
     font-size: 40px;
     text-align: center;
     margin-top: 0;
@@ -34,6 +34,14 @@ h1{
     padding-block: 1px;
     text-transform: capitalize;
     font-weight: bold;
+}
+#head{
+    color: rgba(246, 246, 246, 1);
+    text-align: center;
+    margin-top: 5px;
+    margin-bottom: 0;
+    padding-block: 1px;
+    text-transform: capitalize;
 }
 
 h2{
@@ -63,7 +71,7 @@ h3{
     height: auto;
     margin: 0 auto;
     padding: 30px;
-    background-color: rgba(59, 142, 115, 0.8);
+    background-color: rgba(80, 140, 155, 1);
     backdrop-filter: blur(5px);
     border-radius: 20px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.177);
@@ -74,12 +82,11 @@ h3{
     flex-direction: column;
     align-items: center;
     margin-bottom: 20px;
-    color : #ffffff;
+    color : rgb(0, 0, 0);
 }
 
 #result-card {
     background-color: #f9fff4;
-    border: 2px solid #4CAF50;
     border-radius: 10px;
     padding: 15px;
     margin-top: 20px;
@@ -101,7 +108,7 @@ h3{
 .form-group label {
   display: block;
   margin-bottom: 5px;
-  color: #ffffff;
+  color: rgb(0, 0, 0);
 }
 input[type="number"] {
   width: 100%;
@@ -111,8 +118,8 @@ input[type="number"] {
 }
 
 button[type="submit"] {
-  background-color: #4CAF50;
-  color: white;
+  background-color: #f9fff4;
+  color: black;
   padding: 10px 18px;
   border: none;
   border-radius: 5px;
@@ -123,7 +130,7 @@ button[type="submit"] {
 }
 
 button[type="submit"]:hover {
-  background-color: #3e8e41;
+  background-color: #cfebb7;
 }
 
 .spinner {
