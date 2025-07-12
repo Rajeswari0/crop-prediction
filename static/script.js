@@ -52,7 +52,9 @@ form.addEventListener('submit', async function (e) {
  try {
       const response = await fetch(`${BASE_URL}/upload`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' ,
+          'x-api-key': '1606api'
+        },
         body: JSON.stringify(data)
       });
 

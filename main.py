@@ -5,7 +5,7 @@ Created on Tue Jun 24 09:38:25 2025
 @author: HP
 """
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Header, HTTPException, Depends
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -21,6 +21,11 @@ from datetime import datetime, timezone
 from contextlib import asynccontextmanager
 import os
 
+API_KEY = "1606api"
+
+def verify_api_key(x_api_key: str = Header(...)):
+    if x_api_key != API_KEY:
+        raise HTTPException(status_code=401, detail="Unauthorized")
 
 
 DATABASE_URL = "sqlite:///sensorprediction.db"  # SQLite database file
@@ -104,7 +109,7 @@ def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 @app.post("/sensor_data")
-def receive_sensor_data(sensor: BasicSensor):
+def receive_sensor_data(sensor: BasicSensor, _: str = Depends(verify_api_key)):
     log = SensorPrediction(
         temperature=sensor.temperature,
         humidity=sensor.humidity,
@@ -122,7 +127,7 @@ def receive_sensor_data(sensor: BasicSensor):
 
 
 @app.post("/upload")
-def sensor_upload(data: SensorInput):
+def sensor_upload(data: SensorInput, _: str = Depends(verify_api_key)):
     df = pd.DataFrame([data.model_dump()], columns=x_columns)
     # Scale the input data
     scaled = std.transform(df)   
@@ -190,7 +195,7 @@ def latest_sensor():
 
     
 @app.get("/export/sensor-data", response_class=FileResponse)
-def export_sensor_data(format: str = "csv"):
+def export_sensor_data(format: str = "csv", _: str = Depends(verify_api_key)):
     with Session(engine) as session:
         records = session.exec(select(SensorPrediction)).all()
 
