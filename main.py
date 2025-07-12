@@ -23,7 +23,7 @@ import os
 
 
 
-DATABASE_URL = "sqlite:///temperature_data.db"  # SQLite database file
+DATABASE_URL = "sqlite:///sensorprediction.db"  # SQLite database file
 engine = create_engine(DATABASE_URL)
 
 @asynccontextmanager
