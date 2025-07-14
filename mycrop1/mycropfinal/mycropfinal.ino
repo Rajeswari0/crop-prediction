@@ -29,7 +29,7 @@ float TEMP = 25.0;
 const char* ssid = "Galaxy M53 5G";
 const char* password = "gkbu2351";
 const char* serverURL = "https://crop-prediction-1-t1e1.onrender.com/sensor_data";
-
+const char* apiKey = "1606api";
 
 void setup() {
   // put your setup code here, to run once:
@@ -124,5 +124,4 @@ void loop() {
   }
   delay(10000);
 }
-
 

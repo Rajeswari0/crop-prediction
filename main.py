@@ -13,8 +13,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import pickle
 import pandas as pd
-from typing import Optional
 
+from sqlmodel import SQLModel, Field, create_engine, select, Session
+from typing import Optional
+from datetime import datetime, timezone
+
+from contextlib import asynccontextmanager
 import os
 
 API_KEY = "1606api"
@@ -24,7 +28,16 @@ def verify_api_key(x_api_key: str = Header(...)):
         raise HTTPException(status_code=401, detail="Unauthorized")
 
 
-app = FastAPI()
+DATABASE_URL = "sqlite:///sensorprediction.db"  # SQLite database file
+engine = create_engine(DATABASE_URL)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    SQLModel.metadata.create_all(engine)  # auto-create table
+    yield
+
+app = FastAPI( lifespan=lifespan)
+
 origins = [
     "http://127.0.0.1:8000",  # local frontend
     "http://localhost:8000",
@@ -57,6 +70,23 @@ x_columns = ["N", "P", "K", "temperature", "humidity", "ph", "rainfall"]
 
 
 
+
+class SensorPrediction(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    N: Optional[float] = None
+    P: Optional[float] = None
+    K: Optional[float] = None
+    temperature: float
+    humidity: float
+    ph: Optional[float] = None
+    rainfall: Optional[float] = None
+    soil_moisture: Optional[float] = None
+    soil_temp: Optional[float] = None
+    tds: Optional[float] = None 
+    predicted_crop: str
+    feedback: Optional[str] = None
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 class BasicSensor(BaseModel):
     temperature: float
     humidity: float
@@ -80,7 +110,19 @@ def home(request: Request):
 
 @app.post("/sensor_data")
 def receive_sensor_data(sensor: BasicSensor, _: str = Depends(verify_api_key)):
-    return {"message": "Sensor data recieved", "data": sensor.model_dump()}
+    log = SensorPrediction(
+        temperature=sensor.temperature,
+        humidity=sensor.humidity,
+        soil_moisture=sensor.soil_moisture,
+        soil_temp = sensor.soil_temp,
+        tds = sensor.tds, 
+        predicted_crop="--"
+    )
+    with Session(engine) as session:
+        session.add(log)
+        session.commit()
+        log_id = log.id  # Access ID before session closes
+    return {"message": "Sensor data stored", "id": log_id}
 
 
 
@@ -94,6 +136,86 @@ def sensor_upload(data: SensorInput, _: str = Depends(verify_api_key)):
     # Decode the predicted crop label
     predicted_crop = le.inverse_transform(prediction)[0]
    
-    return {"crop": predicted_crop}
-    
+    with Session(engine) as session:
+        latest_record = session.exec(
+            select(SensorPrediction)
+            .where(SensorPrediction.soil_moisture != None)
+            .order_by(SensorPrediction.timestamp.desc())
+        ).first()
 
+        log = SensorPrediction(
+            N=data.N,
+            P=data.P,
+            K=data.K,
+            temperature=data.temperature,
+            humidity=data.humidity,
+            ph=data.ph,
+            rainfall=data.rainfall,
+            soil_moisture=latest_record.soil_moisture if latest_record else None,
+            soil_temp=latest_record.soil_temp if latest_record else None,
+            tds=latest_record.tds if latest_record else None,
+            predicted_crop=predicted_crop
+    )
+
+    session.add(log)
+    session.commit()
+    return {"crop": predicted_crop, "id": log.id}
+    
+@app.get("/latest_sensor_data")
+def latest_sensor():
+    with Session(engine) as session:
+        record = session.exec(
+            select(SensorPrediction).order_by(SensorPrediction.timestamp.desc())
+        ).first()
+        if record:
+            return {
+                "id": record.id,
+                "temperature": record.temperature,
+                "humidity": record.humidity,
+                "soil_moisture": record.soil_moisture,
+                "soil_temp": record.soil_temp,
+                "tds": record.tds,
+                "ph": record.ph,
+                "rainfall": record.rainfall,
+                "N": record.N,
+                "P": record.P,
+                "K": record.K,
+                "crop": record.predicted_crop
+            }
+        else:
+            return {
+                "id": None,
+                "temperature": 0,
+                "humidity": 0,
+                "soil_moisture": None,
+                "soil_temp": None,
+                "tds": None,
+                "crop": "--"
+            }
+
+    
+@app.get("/export/sensor-data", response_class=FileResponse)
+def export_sensor_data(format: str = "csv", _: str = Depends(verify_api_key)):
+    with Session(engine) as session:
+        records = session.exec(select(SensorPrediction)).all()
+
+    if not records:
+        return {"message": "No sensor data available to export."}
+
+    # Convert SQLModel objects to list of dicts for DataFrame
+    df = pd.DataFrame([r.model_dump() for r in records])
+
+    filename = f"sensor_data_export.{format}"
+
+    if format == "csv":
+        df.to_csv(filename, index=False)
+    elif format == "xlsx":
+        try:
+            import openpyxl
+            df.to_excel(filename, index=False)
+        except ImportError:
+            return {"error": "Install openpyxl to export as Excel."}
+    else:
+        return {"error": "Format must be either 'csv' or 'xlsx'."}
+
+    return FileResponse(path=filename, filename=filename, media_type="application/octet-stream")
