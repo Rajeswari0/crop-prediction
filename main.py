@@ -2,7 +2,7 @@
 """
 Created on Tue Jun 24 09:38:25 2025
 
-@author: HP
+@author: HP 
 """
 
 from fastapi import FastAPI, Request, Header, HTTPException, Depends
@@ -28,7 +28,7 @@ def verify_api_key(x_api_key: str = Header(...)):
         raise HTTPException(status_code=401, detail="Unauthorized")
 
 
-DATABASE_URL = "sqlite:///sensorprediction.db"  # SQLite database file
+DATABASE_URL = "mysql+pymysql://root:#Raje240103@localhost/crop_predict_db" 
 engine = create_engine(DATABASE_URL)
 
 @asynccontextmanager
@@ -39,12 +39,12 @@ async def lifespan(app: FastAPI):
 app = FastAPI( lifespan=lifespan)
 
 origins = [
-    "http://127.0.0.1:8000",  # local frontend
+    "http://127.0.0.1:8000",  
     "http://localhost:8000",
-    "https://crop-prediction-1-t1e1.onrender.com" #deployed frontend  
+    "https://crop-prediction-1-t1e1.onrender.com" 
 ]
 
-# Allow frontend access
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,  # Use specific origin if needed
