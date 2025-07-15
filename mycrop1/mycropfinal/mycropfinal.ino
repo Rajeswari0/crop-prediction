@@ -4,6 +4,14 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <Wire.h>
+#include <Adafruit_SSD1306.h>
+#include <Adafruit_GFX.h>
+
+//OLED
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET -1
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 //DHT
 #define DHTPIN 26
@@ -44,6 +52,16 @@ void setup() {
   Serial.println("Connected to WiFi!!!");
   dht.begin();
   sensors.begin();
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+  Serial.println("OLED init failed");
+  while (true);
+  }
+
+  display.clearDisplay();
+  display.setTextSize(0.5);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+
 }
 
 void loop() {
@@ -91,13 +109,25 @@ void loop() {
   Serial.print("TDS (ppm): ");
   Serial.println(tdsComp);
 
- 
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+  display.print("TEMPERATURE: ");display.print(temperature);display.println(" *C");
+  display.print("HUMIDITY: ");display.print(humidity);display.println(" %");
+  display.print("TDS:");display.print(tdsComp);display.println(" ppm");
+  display.print("STEMPERATURE: ");display.print(soilTemp);display.println("*C");
+  display.print("SOIL DRY %: ");display.println(soilMoisture);
+  display.display();
+
+
 
   if(WiFi.status() == WL_CONNECTED){
     if (!isnan(temperature) && !isnan(humidity) && !isnan(soilMoisture) && !isnan(soilTemp) && !isnan(tdsComp)) {
      HTTPClient http;
      http.begin(String(serverURL));
      http.addHeader("Content-Type","application/json");
+     http.addHeader("x-api-key", apiKey);
 
      String json = "{";
      json +="\"temperature\":" + String(temperature, 2) + ",";
@@ -122,6 +152,6 @@ void loop() {
      http.end();
     }
   }
-  delay(10000);
+  delay(3000);
 }
 
