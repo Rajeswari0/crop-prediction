@@ -15,7 +15,7 @@ import pickle
 import pandas as pd
 
 from sqlmodel import SQLModel, Field, create_engine, select, Session
-from typing import Optional
+from typing import Optional, ClassVar
 from datetime import datetime, timezone
 
 from contextlib import asynccontextmanager
@@ -72,6 +72,7 @@ x_columns = ["N", "P", "K", "temperature", "humidity", "ph", "rainfall"]
 
 
 class SensorPrediction(SQLModel, table=True):
+    __tablename__: ClassVar[str] = "sensorprediction"
     id: Optional[int] = Field(default=None, primary_key=True)
     N: Optional[float] = None
     P: Optional[float] = None
