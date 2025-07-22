@@ -11,6 +11,6 @@ A machine learning based web application which recommends the best suitable crop
    - FRONTEND: HTML, CSS, JavaScript
    - BACKEND: Python + FastAPI
    - ML MODEL: trained with Scikit-learn using Random Forest
-   - DEPLOYMENT:
+   - DEPLOYMENT: Render(cloud based host)
 
 
