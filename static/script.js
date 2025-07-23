@@ -1,3 +1,7 @@
+const baseURL = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost"
+    ? "http://127.0.0.1:8000"
+    : "https://crop-prediction-feue.onrender.com";
+
 async function recommendCrop(event) {
     event.preventDefault();
 
@@ -22,7 +26,7 @@ async function recommendCrop(event) {
     };
 
     try {
-        const response = await fetch('https://crop-prediction-feue.onrender.com/crop_prediction', {
+        const response = await fetch(`${baseURL}/crop_prediction`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
