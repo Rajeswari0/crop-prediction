@@ -1,6 +1,5 @@
-const baseURL = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost"
-    ? "http://127.0.0.1:8000"
-    : "https://crop-prediction-feue.onrender.com";
+const baseURL = "http://127.0.0.1:8000";
+
 
 async function recommendCrop(event) {
     event.preventDefault();
