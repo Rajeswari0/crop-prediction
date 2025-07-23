@@ -13,8 +13,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import pickle
 import pandas as pd
+import pymysql
 
-
+db_config = {
+    "host": "localhost",
+    "user": "root",
+    "password": "#Raje240103",
+    "database": "crop_recommend_db"
+}
 app = FastAPI()
 
 # Allow frontend access
@@ -67,5 +73,31 @@ def crop_pred(input_parameters: model_input):
     # Predict
     prediction = model.predict(input_scaled)
     # Decode label
-    predicted_crop = le.inverse_transform(prediction)
-    return {"recommended crop": predicted_crop[0]}
+    predicted_crop = le.inverse_transform(prediction)[0]
+    # Save to database
+    try:
+        connection = pymysql.connect(**db_config)
+        cursor = connection.cursor()
+        insert_query = """
+            INSERT INTO predictions
+            (N, P, K, temperature, humidity, ph, rainfall, predicted_crop)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        values = (
+            input_parameters.N,
+            input_parameters.P,
+            input_parameters.K,
+            input_parameters.temperature,
+            input_parameters.humidity,
+            input_parameters.ph,
+            input_parameters.rainfall,
+            predicted_crop
+        )
+        cursor.execute(insert_query, values)
+        connection.commit()
+    except Exception as e:
+        print("Database insertion error:", e)
+    finally:
+        cursor.close()
+        connection.close()
+    return {"recommended crop": predicted_crop} 
