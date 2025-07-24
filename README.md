@@ -63,3 +63,5 @@ crop prediction/
 . Replace MySQL connection values in main.py with your own (user, password, host).
 
 
+Main branch contains the stable version
+Additional experimental features (e.g., live sensor data logging) are in development in other branches.
