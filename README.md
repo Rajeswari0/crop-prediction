@@ -1,4 +1,4 @@
-# crop-prediction system
+# CROP RECOMMENDATIN SYSTEM
 A machine learning based web application which recommends the best suitable crop to grow based on the given input parameters.
 ## FEATURES
    - prediction of crop based on user input
